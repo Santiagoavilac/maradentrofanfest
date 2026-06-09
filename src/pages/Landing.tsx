@@ -1,14 +1,7 @@
-import { ArrowRight, Gift, MonitorPlay, Palmtree, Trophy } from "lucide-react";
+import { ArrowRight, Gamepad2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../components/Button";
 import Layout from "../components/Layout";
-
-const benefits = [
-  { title: "Pantalla gigante", icon: <MonitorPlay size={22} /> },
-  { title: "Juegos y dinámicas", icon: <Trophy size={22} /> },
-  { title: "Premios", icon: <Gift size={22} /> },
-  { title: "Frente a la laguna", icon: <Palmtree size={22} /> },
-];
 
 export default function Landing() {
   return (
@@ -64,15 +57,27 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:mt-0">
-            {benefits.map((benefit) => (
-              <article key={benefit.title} className="rounded-3xl border border-white/16 bg-white/[0.1] p-5 shadow-glow backdrop-blur-2xl">
-                <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-lagoon/18 text-lagoon">
-                  {benefit.icon}
-                </div>
-                <h2 className="text-xl font-extrabold">{benefit.title}</h2>
-              </article>
-            ))}
+          <div className="mt-10 grid content-center lg:mt-0">
+            <article className="max-w-md rounded-3xl border border-white/16 bg-white/[0.1] p-5 shadow-glow backdrop-blur-2xl sm:p-6">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-pitch/18 text-pitch">
+                <Gamepad2 size={24} />
+              </div>
+              <h2 className="font-display text-2xl font-black sm:text-3xl">Jugá por premios semanales</h2>
+              <p className="mt-3 text-sm leading-6 text-white/74 sm:text-base">
+                Podés ganar vales semanalmente de 100bs si aparecés en los rankings.
+              </p>
+              <a
+                className="mt-5 inline-flex w-full sm:w-auto"
+                href="https://maradentrogames.vercel.app/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button className="w-full sm:w-auto">
+                  Juega acá
+                  <ArrowRight size={18} />
+                </Button>
+              </a>
+            </article>
           </div>
         </div>
       </section>
