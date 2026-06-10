@@ -15,6 +15,7 @@ export default function App() {
       <Route path="/admin" element={<AdminLogin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/scanner" element={<QRScanner />} />
+      <Route path="/scanner" element={<QRScanner publicAccess />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

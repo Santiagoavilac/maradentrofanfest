@@ -61,6 +61,7 @@ export default function Register() {
           email: form.email || null,
           document_id: form.document_id || null,
           qr_code,
+          guest_type: "regular",
           status: "registered",
           created_at: new Date().toISOString(),
           checked_in_at: null,
@@ -80,6 +81,7 @@ export default function Register() {
           document_id: form.document_id.trim() || null,
           companions: form.companions,
           qr_code,
+          guest_type: "regular",
         })
         .select()
         .single<Registration>();

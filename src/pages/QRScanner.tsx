@@ -5,7 +5,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../components/Button";
 import Layout from "../components/Layout";
 import ScannerResult from "../components/ScannerResult";
-import { Registration, supabase } from "../lib/supabase";
+import { ScannerRpcResult, supabase } from "../lib/supabase";
 
 type ResultState = {
   type: "valid" | "used" | "invalid" | "idle";
@@ -22,7 +22,11 @@ function cleanCode(raw: string) {
   }
 }
 
-export default function QRScanner() {
+type QRScannerProps = {
+  publicAccess?: boolean;
+};
+
+export default function QRScanner({ publicAccess = false }: QRScannerProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -39,48 +43,39 @@ export default function QRScanner() {
     }
 
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    if (!publicAccess && !sessionData.session) {
       navigate("/admin", { replace: true });
       return;
     }
 
-    const { data, error } = await supabase
-      .from("registrations")
-      .select("*")
-      .eq("qr_code", qr_code)
-      .maybeSingle<Registration>();
+    const { data, error } = await supabase.rpc("scan_registration_qr", { input_code: qr_code });
 
-    if (error || !data) {
+    const rows = data as ScannerRpcResult[] | null;
+    const scanned = rows?.[0];
+
+    if (error || !scanned || scanned.result_type === "invalid") {
       setResult({ type: "invalid", title: "QR inválido", detail: qr_code });
       return;
     }
 
-    if (data.status === "checked_in") {
+    const guestLabel = scanned.guest_type === "special" ? "Special guest" : "Asistente";
+    const fullName = `${scanned.first_name ?? ""} ${scanned.last_name ?? ""}`.trim();
+
+    if (scanned.result_type === "used") {
       setResult({
         type: "used",
         title: "QR ya utilizado",
-        detail: `${data.first_name} ${data.last_name} ingresó ${data.checked_in_at ? new Date(data.checked_in_at).toLocaleString() : "anteriormente"}.`,
+        detail: `${guestLabel}: ${fullName}. Ingreso anterior: ${scanned.checked_in_at ? new Date(scanned.checked_in_at).toLocaleString() : "sin hora registrada"}.`,
       });
-      return;
-    }
-
-    const checkedInAt = new Date().toISOString();
-    const { error: updateError } = await supabase
-      .from("registrations")
-      .update({ status: "checked_in", checked_in_at: checkedInAt })
-      .eq("id", data.id);
-
-    if (updateError) {
-      setResult({ type: "invalid", title: "No se pudo marcar ingreso", detail: updateError.message });
       return;
     }
 
     setResult({
       type: "valid",
-      title: "Ingreso válido",
-      detail: `${data.first_name} ${data.last_name}`,
+      title: scanned.guest_type === "special" ? "Special guest válido" : "Ingreso válido",
+      detail: fullName,
     });
-  }, [navigate]);
+  }, [navigate, publicAccess]);
 
   useEffect(() => {
     if (searchParams.get("code")) {
@@ -111,12 +106,14 @@ export default function QRScanner() {
     <Layout>
       <section className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-5xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_0.8fr]">
         <div>
-          <Link to="/admin/dashboard" className="mb-4 inline-flex">
-            <Button variant="ghost">
-              <ArrowLeft size={18} />
-              Dashboard
-            </Button>
-          </Link>
+          {!publicAccess ? (
+            <Link to="/admin/dashboard" className="mb-4 inline-flex">
+              <Button variant="ghost">
+                <ArrowLeft size={18} />
+                Dashboard
+              </Button>
+            </Link>
+          ) : null}
           <div className="rounded-[2rem] border border-white/14 bg-white/[0.08] p-4 shadow-glow backdrop-blur-2xl">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lagoon/16 text-lagoon">

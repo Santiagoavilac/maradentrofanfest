@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 export type RegistrationStatus = "registered" | "checked_in";
+export type GuestType = "regular" | "special";
 
 export type Registration = {
   id: string;
@@ -11,8 +12,17 @@ export type Registration = {
   document_id: string | null;
   companions: number;
   qr_code: string;
+  guest_type: GuestType;
   status: RegistrationStatus;
   created_at: string;
+  checked_in_at: string | null;
+};
+
+export type ScannerRpcResult = {
+  result_type: "valid" | "used" | "invalid";
+  first_name: string | null;
+  last_name: string | null;
+  guest_type: GuestType | null;
   checked_in_at: string | null;
 };
 

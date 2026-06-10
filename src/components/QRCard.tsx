@@ -4,9 +4,10 @@ import Button from "./Button";
 type QRCardProps = {
   value: string;
   name?: string;
+  label?: string;
 };
 
-export default function QRCard({ value, name }: QRCardProps) {
+export default function QRCard({ value, name, label = "Fan Fest" }: QRCardProps) {
   const downloadQr = () => {
     const canvas = document.getElementById("fan-fest-qr") as HTMLCanvasElement | null;
     if (!canvas) return;
@@ -23,6 +24,7 @@ export default function QRCard({ value, name }: QRCardProps) {
         <QRCodeCanvas id="fan-fest-qr" value={value} size={280} marginSize={2} level="H" />
       </div>
       <div>
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-sand">{label}</p>
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-lagoon">{value}</p>
         {name ? <h2 className="mt-2 font-display text-2xl font-black">{name}</h2> : null}
         <p className="mt-2 text-sm text-white/68">Mostrá este QR en el ingreso al Fan Fest.</p>

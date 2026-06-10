@@ -8,6 +8,16 @@ export function createQrCode() {
   return `MA-2026-${token}`;
 }
 
+export function createSpecialQrCode() {
+  const random = crypto.getRandomValues(new Uint32Array(2));
+  const token = Array.from(random)
+    .map((part) => part.toString(36).toUpperCase().padStart(6, "0"))
+    .join("")
+    .slice(0, 8);
+
+  return `SP-2026-${token}`;
+}
+
 export function storeRegistrationSnapshot(registration: unknown) {
   sessionStorage.setItem("latest-registration", JSON.stringify(registration));
 }
