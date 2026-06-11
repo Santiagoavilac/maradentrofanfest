@@ -49,11 +49,12 @@ export default function Register() {
 
     setLoading(true);
     const qr_code = createQrCode();
+    const registrationId = crypto.randomUUID();
 
     try {
       if (!isSupabaseConfigured || !supabase) {
         const localRegistration = {
-          id: crypto.randomUUID(),
+          id: registrationId,
           ...form,
           email: form.email || null,
           document_id: form.document_id || null,
@@ -68,24 +69,38 @@ export default function Register() {
         return;
       }
 
-      const { data, error: insertError } = await supabase
+      const registration = {
+        id: registrationId,
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || null,
+        document_id: form.document_id.trim() || null,
+        companions: form.companions,
+        qr_code,
+        guest_type: "regular" as const,
+        status: "registered" as const,
+        created_at: new Date().toISOString(),
+        checked_in_at: null,
+      } satisfies Registration;
+
+      const { error: insertError } = await supabase
         .from("registrations")
         .insert({
-          first_name: form.first_name.trim(),
-          last_name: form.last_name.trim(),
-          phone: form.phone.trim(),
-          email: form.email.trim() || null,
-          document_id: form.document_id.trim() || null,
-          companions: form.companions,
-          qr_code,
-          guest_type: "regular",
-        })
-        .select()
-        .single<Registration>();
+          id: registration.id,
+          first_name: registration.first_name,
+          last_name: registration.last_name,
+          phone: registration.phone,
+          email: registration.email,
+          document_id: registration.document_id,
+          companions: registration.companions,
+          qr_code: registration.qr_code,
+          guest_type: registration.guest_type,
+        });
 
       if (insertError) throw insertError;
-      storeRegistrationSnapshot(data);
-      navigate(`/mi-qr/${data.id}`);
+      storeRegistrationSnapshot(registration);
+      navigate(`/mi-qr/${registration.id}`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo completar el registro.");
     } finally {
