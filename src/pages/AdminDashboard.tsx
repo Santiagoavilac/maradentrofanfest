@@ -1,4 +1,4 @@
-import { Eye, LogOut, QrCode, Search, TicketCheck, UserPlus, Users, Waves } from "lucide-react";
+import { CheckCircle2, Eye, LogOut, QrCode, Search, TicketCheck, UserPlus, Users, Waves } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
@@ -57,6 +57,8 @@ export default function AdminDashboard() {
         registration.first_name,
         registration.last_name,
         registration.phone,
+        registration.document_id ?? "",
+        registration.companion_names.join(" "),
         registration.qr_code,
       ].some((value) => value.toLowerCase().includes(needle)),
     );
@@ -88,6 +90,22 @@ export default function AdminDashboard() {
     navigate("/admin");
   };
 
+  const markCheckOut = async (registration: Registration) => {
+    if (!supabase) return;
+
+    const { error: updateError } = await supabase
+      .from("registrations")
+      .update({ checked_out_at: new Date().toISOString() })
+      .eq("id", registration.id);
+
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+
+    await loadRegistrations();
+  };
+
   const createSpecialGuest = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
@@ -110,6 +128,7 @@ export default function AdminDashboard() {
         email: null,
         document_id: null,
         companions: 0,
+        companion_names: [],
         qr_code: qrCode,
         guest_type: "special",
       })
@@ -199,18 +218,21 @@ export default function AdminDashboard() {
           <>
             <section className="mt-6">
               <h2 className="mb-3 font-display text-2xl font-black">Registros generales</h2>
-              <RegistrationTable registrations={regularRegistrations} onCheckIn={markCheckIn} />
+              <RegistrationTable registrations={regularRegistrations} onCheckIn={markCheckIn} onCheckOut={markCheckOut} />
             </section>
             <section className="mt-8">
               <h2 className="mb-3 font-display text-2xl font-black">Special guests</h2>
               <div className="overflow-hidden rounded-3xl border border-white/12 bg-white/[0.07] backdrop-blur-xl">
                 <div className="overflow-x-auto">
-                  <table className="min-w-[720px] w-full text-left text-sm">
+                  <table className="min-w-[1120px] w-full text-left text-sm">
                     <thead className="border-b border-white/10 bg-white/[0.08] text-xs uppercase tracking-[0.12em] text-white/56">
                       <tr>
                         <th className="px-4 py-4">Nombre</th>
                         <th className="px-4 py-4">Teléfono</th>
                         <th className="px-4 py-4">Estado</th>
+                        <th className="px-4 py-4">Reserva</th>
+                        <th className="px-4 py-4">Entrada</th>
+                        <th className="px-4 py-4">Salida</th>
                         <th className="px-4 py-4">Código</th>
                         <th className="px-4 py-4">Acción</th>
                       </tr>
@@ -225,12 +247,33 @@ export default function AdminDashboard() {
                               {guest.status === "checked_in" ? "Ingresado" : "Pendiente"}
                             </span>
                           </td>
+                          <td className="px-4 py-4 text-white/62">{new Date(guest.created_at).toLocaleString()}</td>
+                          <td className="px-4 py-4 text-white/62">{guest.checked_in_at ? new Date(guest.checked_in_at).toLocaleString() : "Sin registro"}</td>
+                          <td className="px-4 py-4 text-white/62">{guest.checked_out_at ? new Date(guest.checked_out_at).toLocaleString() : "Sin registro"}</td>
                           <td className="px-4 py-4 text-white/62">{guest.qr_code}</td>
                           <td className="px-4 py-4">
-                            <Button className="min-h-10 px-4 py-2 text-xs" variant="secondary" onClick={() => setSelectedSpecial(guest)}>
-                              <Eye size={16} />
-                              Ver QR
-                            </Button>
+                            <div className="flex flex-wrap gap-2">
+                              <Button className="min-h-10 px-4 py-2 text-xs" variant="secondary" onClick={() => setSelectedSpecial(guest)}>
+                                <Eye size={16} />
+                                Ver QR
+                              </Button>
+                              <Button
+                                className="min-h-10 px-4 py-2 text-xs"
+                                disabled={guest.status === "checked_in"}
+                                onClick={() => markCheckIn(guest)}
+                              >
+                                <CheckCircle2 size={16} />
+                                Entrada
+                              </Button>
+                              <Button
+                                className="min-h-10 px-4 py-2 text-xs"
+                                variant="secondary"
+                                disabled={guest.status !== "checked_in" || Boolean(guest.checked_out_at)}
+                                onClick={() => markCheckOut(guest)}
+                              >
+                                Salida
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}

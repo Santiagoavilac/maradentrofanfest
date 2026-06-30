@@ -11,11 +11,13 @@ export type Registration = {
   email: string | null;
   document_id: string | null;
   companions: number;
+  companion_names: string[];
   qr_code: string;
   guest_type: GuestType;
   status: RegistrationStatus;
   created_at: string;
   checked_in_at: string | null;
+  checked_out_at: string | null;
 };
 
 export type ScannerRpcResult = {

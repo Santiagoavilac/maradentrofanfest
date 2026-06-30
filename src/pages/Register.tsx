@@ -10,6 +10,7 @@ type FormState = {
   email: string;
   document_id: string;
   companions: number;
+  companion_names: string[];
   accepted: boolean;
 };
 
@@ -20,6 +21,7 @@ const initialForm: FormState = {
   email: "",
   document_id: "",
   companions: 0,
+  companion_names: [],
   accepted: false,
 };
 
@@ -33,12 +35,31 @@ export default function Register() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const updateCompanions = (companions: number) => {
+    setForm((current) => ({
+      ...current,
+      companions,
+      companion_names: companions > 0 ? [current.companion_names[0] ?? ""] : [],
+    }));
+  };
+
+  const updateCompanionName = (value: string) => {
+    setForm((current) => ({ ...current, companion_names: [value] }));
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
 
     if (!form.first_name.trim() || !form.last_name.trim() || !form.phone.trim()) {
       setError("Nombre, apellido y teléfono son obligatorios.");
+      return;
+    }
+
+    const companionNames = form.companion_names.map((name) => name.trim()).filter(Boolean);
+
+    if (form.companions > 0 && companionNames.length !== form.companions) {
+      setError("Ingresá el nombre del acompañante.");
       return;
     }
 
@@ -58,11 +79,13 @@ export default function Register() {
           ...form,
           email: form.email || null,
           document_id: form.document_id || null,
+          companion_names: companionNames,
           qr_code,
           guest_type: "regular",
           status: "registered",
           created_at: new Date().toISOString(),
           checked_in_at: null,
+          checked_out_at: null,
         } satisfies Registration & { accepted: boolean };
         storeRegistrationSnapshot(localRegistration);
         navigate(`/mi-qr/${localRegistration.id}`);
@@ -77,11 +100,13 @@ export default function Register() {
         email: form.email.trim() || null,
         document_id: form.document_id.trim() || null,
         companions: form.companions,
+        companion_names: companionNames,
         qr_code,
         guest_type: "regular" as const,
         status: "registered" as const,
         created_at: new Date().toISOString(),
         checked_in_at: null,
+        checked_out_at: null,
       } satisfies Registration;
 
       const { error: insertError } = await supabase
@@ -94,6 +119,7 @@ export default function Register() {
           email: registration.email,
           document_id: registration.document_id,
           companions: registration.companions,
+          companion_names: registration.companion_names,
           qr_code: registration.qr_code,
           guest_type: registration.guest_type,
         });
@@ -185,7 +211,7 @@ export default function Register() {
                 <p className="text-xs font-semibold uppercase tracking-[0.42em] text-[#b87729]">Registro de ingreso</p>
                 <h2 className="mt-4 font-serif text-4xl uppercase tracking-[0.1em] text-[#1f1b17] sm:text-[2.85rem]">Generá tu QR</h2>
                 <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-[#62574d]">
-                  Completá tus datos y guardá el código para presentarlo en puerta.
+                  Completá tus datos y guardá el código para presentarlo en puerta. Cada persona debe venir con carnet de identidad.
                 </p>
               </div>
 
@@ -206,12 +232,24 @@ export default function Register() {
                   <input value={form.document_id} onChange={(event) => update("document_id", event.target.value)} />
                 </Field>
                 <Field label="Acompañantes">
-                  <select value={form.companions} onChange={(event) => update("companions", Number(event.target.value))}>
+                  <select value={form.companions} onChange={(event) => updateCompanions(Number(event.target.value))}>
                     <option value={0}>0</option>
                     <option value={1}>1</option>
                   </select>
                 </Field>
               </div>
+
+              {form.companions > 0 ? (
+                <div className="mt-4">
+                  <Field label="Nombre del acompañante">
+                    <input value={form.companion_names[0] ?? ""} onChange={(event) => updateCompanionName(event.target.value)} required />
+                  </Field>
+                </div>
+              ) : null}
+
+              <p className="mt-5 border border-[#c17b2c]/28 bg-[#fff7eb] px-4 py-3 text-sm font-semibold leading-6 text-[#6f4a1a]">
+                Aclaración: vení con tu carnet de identidad. Si registrás acompañante, esa persona también debe presentarlo en puerta.
+              </p>
 
               <label className="mt-5 flex items-start gap-3 border border-[#2a251f]/14 bg-[#f5eadc]/70 p-4 text-sm leading-6 text-[#62574d]">
                 <input

@@ -19,7 +19,7 @@ export default function MyQR() {
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-lagoon">Registro confirmado</p>
           <h1 className="mt-3 font-display text-4xl font-black sm:text-6xl">Tu entrada está lista</h1>
           <p className="mx-auto mt-4 max-w-lg text-white/68">
-            Mostrá este QR en el ingreso al Fan Fest.
+            Mostrá este QR en el ingreso al Fan Fest. Vení con tu carnet de identidad.
           </p>
 
           <div className="mt-8">

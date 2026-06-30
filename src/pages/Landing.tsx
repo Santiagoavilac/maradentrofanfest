@@ -64,6 +64,9 @@ export default function Landing() {
             <p className="mt-7 max-w-xl text-base leading-8 text-white/78 sm:text-lg">
               Mar Adentro y El Arrecife reciben el Fan Fest frente a la laguna. Reservá tu ingreso, guardá tu QR y presentalo en puerta.
             </p>
+            <p className="mt-4 max-w-xl border-l-2 border-[#d29a4a] pl-4 text-sm font-semibold leading-6 text-white/82">
+              Para ingresar, cada asistente debe venir con carnet de identidad.
+            </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/registro"
